@@ -15,5 +15,6 @@ jobs:
           COMMIT_MSG=$(git log -1 --pretty=format:"%s")
           curl -H "Content-Type: application/json" \
           -X POST \
-          -d "{\"content\": \"📝 Novo commit no repositório: $COMMIT_MSG\"}" \
+          -d "{\"content\": \"📝 Commit na branch *$BRANCH_NAME*: $COMMIT_MSG\"}" \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
           https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790

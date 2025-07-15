@@ -19,16 +19,13 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
-          # Obtém commits de forma segura
           COMMITS=$(git log --pretty=format:"%h|%an|%s" ${{ github.event.before }}..${{ github.sha }} 2>/dev/null || git log -1 --pretty=format:"%h|%an|%s")
 
-          # Cabeçalho fixo
           MESSAGE="\n📌 **Novo Push no Repositório!**"
           MESSAGE+="\n🌿 **Branch:** ${{ github.ref_name }}"
           MESSAGE+="\n🔢 **Total de Commits:** $(echo "$COMMITS" | wc -l)"
           MESSAGE+="\n――――――――――――――――――"
 
-          # Processa cada commit
           while IFS='|' read -r HASH USER MSG; do
             COMMIT_URL="https://github.com/${{ github.repository }}/commit/$HASH"
             MESSAGE+="\n\n👤 **Usuário:** $USER"
@@ -37,7 +34,6 @@ jobs:
             MESSAGE+="\n――――――――――――――――――"
           done <<< "$COMMITS"
 
-          # Envia usando curl com tratamento de erro
           curl -H "Content-Type: application/json" \
                -X POST \
                -d "{\"content\":\"$MESSAGE\"}" \

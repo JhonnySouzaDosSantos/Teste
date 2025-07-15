@@ -14,25 +14,22 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.DISCORD_ISSUES_WEBHOOK }}
         run: |
-          # Dados da Issue
+
           EVENT_TYPE=${{ github.event.action }}
           ISSUE_URL=${{ github.event.issue.html_url }}
           ISSUE_TITLE=${{ github.event.issue.title }}
           USER=${{ github.event.issue.user.login }}
 
-          # Mensagem base
           MESSAGE="📢 **Nova Atividade em Issues**\n"
           MESSAGE+="🔹 **Tipo:** \`$EVENT_TYPE\`\n"
           MESSAGE+="🔹 **Título:** [$ISSUE_TITLE]($ISSUE_URL)\n"
           MESSAGE+="🔹 **Autor:** $USER\n"
 
-          # Se for um comentário
           if [ "$EVENT_TYPE" = "created" ]; then
             COMMENT=${{ github.event.comment.body }}
             MESSAGE+="💬 **Comentário:** ${COMMENT:0:100}...\n"  # Limita a 100 chars
           fi
 
-          # Envia
           curl -X POST \
                -H "Content-Type: application/json" \
                -d "{\"content\":\"$MESSAGE\"}" \

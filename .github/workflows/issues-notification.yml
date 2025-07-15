@@ -18,22 +18,27 @@ jobs:
           EVENT_TYPE=${{ github.event.action }}
           ISSUE_URL=${{ github.event.issue.html_url }}
           ISSUE_TITLE=${{ github.event.issue.title }}
+          ISSUE_BODY=${{ github.event.issue.body }}
           USER=${{ github.event.issue.user.login }}
 
-          # Mensagem base
-          MESSAGE="📢 **Nova Atividade em Issues**\n"
+          # Formata a mensagem
+          MESSAGE="📢 **Nova Issue**\n"
           MESSAGE+="🔹 **Tipo:** \`$EVENT_TYPE\`\n"
           MESSAGE+="🔹 **Título:** [$ISSUE_TITLE]($ISSUE_URL)\n"
-          MESSAGE+="🔹 **Autor:** $USER\n"
+          MESSAGE+="🔹 **Autor:** $USER\n\n"
+          MESSAGE+="**Descrição:**\n"
+          MESSAGE+="\`\`\`\n${ISSUE_BODY}\n\`\`\`\n"
 
           # Se for um comentário
           if [ "$EVENT_TYPE" = "created" ]; then
             COMMENT=${{ github.event.comment.body }}
-            MESSAGE+="💬 **Comentário:** ${COMMENT:0:100}...\n"  # Limita a 100 chars
+            MESSAGE+="💬 **Comentário:** \n\`\`\`\n${COMMENT}\n\`\`\`"
           fi
 
-          # Envia
-          curl -X POST \
-               -H "Content-Type: application/json" \
-               -d "{\"content\":\"$MESSAGE\"}" \
-               "$WEBHOOK_URL"
+          # Envia para o Discord (usando Python para evitar problemas de formatação)
+          python3 -c "
+          import os, json, requests
+          webhook_url = os.environ['WEBHOOK_URL']
+          payload = {'content': os.environ.get('MESSAGE')}
+          requests.post(webhook_url, json=payload)
+          "

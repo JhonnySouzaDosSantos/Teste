@@ -17,23 +17,22 @@ jobs:
 
       - name: Enviar notificação para o Discord
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           GITHUB_EVENT_BEFORE: ${{ github.event.before }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
+          DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790"
+
           if [ "$GITHUB_EVENT_BEFORE" = "0000000000000000000000000000000000000000" ]; then
-            COMMITS=$(git log -10 --pretty=format:"**🆔 Hash:** `%h`\n**👤 Usuario:** %an\n**💬 Mensagem:** %s\n\n")
+            COMMITS=$(git log -10 --pretty=format:"**🆔 Hash:** \`%h\`\n**👤 Usuario:** %an\n**💬 Mensagem:** %s\n")
           else
-            COMMITS=$(git log --pretty=format:"**🆔 Hash:** `%h`\n**👤 Usuario:** %an\n**💬 Mensagem:** %s\n\n" $GITHUB_EVENT_BEFORE..$GITHUB_SHA)
+            COMMITS=$(git log --pretty=format:"**🆔 Hash:** \`%h\`\n**👤 Usuario:** %an\n**💬 Mensagem:** %s\n" $GITHUB_EVENT_BEFORE..$GITHUB_SHA)
           fi
 
           if [ -z "$COMMITS" ]; then
             COMMITS="Nenhum commit encontrado."
           fi
 
-          COMMITS_ESCAPED=$(echo "$COMMITS" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
-
           curl -H "Content-Type: application/json" \
                -X POST \
-               -d "{\"content\": \"📌 **Novos Commits Recebidos:**\n\n$COMMITS_ESCAPED\n—————————————————————\"}" \
-               "https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790"
+               -d "{\"content\": \"📌 **Novos Commits Recebidos:**\n\n$COMMITS\n—————————————————————\"}" \
+               "$DISCORD_WEBHOOK_URL"

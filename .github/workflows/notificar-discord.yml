@@ -33,6 +33,20 @@ jobs:
 
           COMMITS_ESCAPED=$(echo "$COMMITS" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
 
+          # Cabeçalho fixo
+          MESSAGE="📌 **Novo Push no Repositório!**"
+          MESSAGE+="\n🌿 **Branch:** ${{ github.ref_name }}"
+          MESSAGE+="\n🔢 **Total de Commits:** $(echo "$COMMITS" | wc -l)\n"
+
+          # Processa cada commit
+          while IFS='|' read -r HASH USER MSG; do
+            MESSAGE+="\n――――――――――――――――――"
+            MESSAGE+="\n👤 **Usuário:** $USER"
+            MESSAGE+="\n🆔 **Hash:** \`$HASH\`"
+            MESSAGE+="\n💬 **Mensagem:** $MSG"
+          done <<< "$COMMITS"
+
+          # Envia usando curl com tratamento de erro
           curl -H "Content-Type: application/json" \
                -X POST \
                -d "{\"content\": \"📌 **Novos Commits Recebidos:**\n\n$COMMITS_ESCAPED\n—————————————————————\"}" \

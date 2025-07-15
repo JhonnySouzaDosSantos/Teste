@@ -23,17 +23,17 @@ jobs:
           COMMITS=$(git log --pretty=format:"%h|%an|%s" ${{ github.event.before }}..${{ github.sha }} 2>/dev/null || git log -1 --pretty=format:"%h|%an|%s")
 
           # Cabeçalho fixo
-          MESSAGE="――――――――――――――――――"
-          MESSAGE+="\n📌 **Novo Push no Repositório!**"
+          MESSAGE="\n📌 **Novo Push no Repositório!**"
           MESSAGE+="\n🌿 **Branch:** ${{ github.ref_name }}"
           MESSAGE+="\n🔢 **Total de Commits:** $(echo "$COMMITS" | wc -l)"
+          MESSAGE+="\n――――――――――――――――――\n"
 
           # Processa cada commit
           while IFS='|' read -r HASH USER MSG; do
-            MESSAGE+="\n――――――――――――――――――"
             MESSAGE+="\n👤 **Usuário:** $USER"
             MESSAGE+="\n🆔 **Hash:** \`$HASH\`"
-            MESSAGE+="\n💬 **Mensagem:** $MSG\n"
+            MESSAGE+="\n💬 **Mensagem:** $MSG"
+            MESSAGE+="\n――――――――――――――――――"
           done <<< "$COMMITS"
 
           # Envia usando curl com tratamento de erro

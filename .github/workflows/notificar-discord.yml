@@ -23,7 +23,7 @@ jobs:
         run: |
           DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790"
 
-          # Verifica commits entre o before e o SHA atual
+          # Pega commits entre o before e o SHA atual
           if [ "$GITHUB_EVENT_BEFORE" = "0000000000000000000000000000000000000000" ]; then
             COMMITS=$(git log -10 --pretty=format:"%h|%an|%s%n")
           else
@@ -35,16 +35,36 @@ jobs:
             exit 0
           fi
 
-          COUNT=1
+          # Conta total de commits no branch atual
+          TOTAL_COMMITS=$(git rev-list --count $GITHUB_REF_NAME)
+          # Conta quantos commits tem no push atual
+          NUM_COMMITS=$(echo "$COMMITS" | grep -c '^')
+          # Calcula o início da numeração para esses commits
+          START=$((TOTAL_COMMITS - NUM_COMMITS + 1))
+          COUNT=$START
+
           MESSAGE=""
 
-          # Monta a mensagem formatada
           while IFS= read -r line; do
             HASH=$(echo "$line" | cut -d'|' -f1)
             USER=$(echo "$line" | cut -d'|' -f2)
             MSG=$(echo "$line" | cut -d'|' -f3)
 
-            MESSAGE="$MESSAGE\n📌 **Novo Commit!**\n\n👤 **Usuario:** $USER\n\n🆔 **Hash do Commit:** \`$HASH\`\n\n🔢 **Numero do Commit:** $COUNT\n\n💬 **Mensagem:** $MSG\n\n🌿 **Branch:** $GITHUB_REF_NAME\n—————————————————————\n"
+            MESSAGE="${MESSAGE}📌 **Novo Commit!**
+
+👤 **Usuario:** $USER
+
+🆔 **Hash do Commit:** \`$HASH\`
+
+🔢 **Numero do Commit:** $COUNT
+
+💬 **Mensagem:** $MSG
+
+🌿 **Branch:** $GITHUB_REF_NAME
+
+—————————————————————
+
+"
 
             COUNT=$((COUNT+1))
           done <<< "$COMMITS"

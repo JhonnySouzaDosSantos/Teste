@@ -26,14 +26,14 @@ jobs:
           MESSAGE="――――――――――――――――――"
           MESSAGE+="\n📌 **Novo Push no Repositório!**"
           MESSAGE+="\n🌿 **Branch:** ${{ github.ref_name }}"
-          MESSAGE+="\n🔢 **Total de Commits:** $(echo "$COMMITS" | wc -l)\n"
+          MESSAGE+="\n🔢 **Total de Commits:** $(echo "$COMMITS" | wc -l)"
 
           # Processa cada commit
           while IFS='|' read -r HASH USER MSG; do
             MESSAGE+="\n――――――――――――――――――"
             MESSAGE+="\n👤 **Usuário:** $USER"
             MESSAGE+="\n🆔 **Hash:** \`$HASH\`"
-            MESSAGE+="\n💬 **Mensagem:** $MSG"
+            MESSAGE+="\n💬 **Mensagem:** $MSG\n"
           done <<< "$COMMITS"
 
           # Envia usando curl com tratamento de erro

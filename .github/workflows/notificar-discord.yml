@@ -23,11 +23,8 @@ jobs:
           COMMITS=$(git log --pretty=format:"%h|%an|%s" ${{ github.event.before }}..${{ github.sha }} || git log -1 --pretty=format:"%h|%an|%s")
 
           # Monta a mensagem PRINCIPAL (título)
-          MESSAGE="📌 **Novo Push no Repositório!**\n"
-          MESSAGE+="🌿 **Branch:** ${{ github.ref_name }}\n"
-          MESSAGE+="🔢 **Total de Commits:** $(echo "$COMMITS" | wc -l)\n\n"
-
-          # Processa CADA commit (formato limpo)
+          MESSAGE="📌 **Novo Push no Repositório!**\n🌿 **Branch:** ${{ github.ref_name }}\n🔢 **Total de Commits:** $(echo "$COMMITS" | wc -l)\n\n"
+          
           while IFS='|' read -r HASH USER MSG; do
             MESSAGE+="——————————————\n"
             MESSAGE+="👤 **Usuário:** $USER\n"

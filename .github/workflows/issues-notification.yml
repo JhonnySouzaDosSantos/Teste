@@ -14,23 +14,29 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.DISCORD_ISSUES_WEBHOOK }}
         run: |
-
-          EVENT_TYPE=${{ github.event.action }}
+          # Dados básicos da issue (compatível com ambos os eventos)
           ISSUE_URL=${{ github.event.issue.html_url }}
           ISSUE_TITLE=${{ github.event.issue.title }}
           USER=${{ github.event.issue.user.login }}
 
+          # Mensagem base
           MESSAGE="📢 **Nova Atividade em Issues**\n"
-          MESSAGE+="🔹 **Tipo:** \`$EVENT_TYPE\`\n"
           MESSAGE+="🔹 **Título:** [$ISSUE_TITLE]($ISSUE_URL)\n"
           MESSAGE+="🔹 **Autor:** $USER\n"
 
-          if [ "$EVENT_TYPE" = "created" ]; then
+          # Verifica o tipo de evento
+          if [ "${{ github.event_name }}" = "issues" ]; then
+            # Evento de abertura/fechamento/reabertura
+            MESSAGE+="🔹 **Tipo:** \`${{ github.event.action }}\`\n"
+          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
+            # Evento de comentário
+            MESSAGE+="🔹 **Tipo:** \`comment\`\n"
             COMMENT=${{ github.event.comment.body }}
             MESSAGE+="💬 **Comentário:** ${COMMENT:0:100}...\n"  # Limita a 100 chars
           fi
 
+          # Envia para o Discord
           curl -X POST \
                -H "Content-Type: application/json" \
-               -d "{\"content\":\"$MESSAGE\"}" \
+               -d "{\"content\":\"$(echo "$MESSAGE" | sed 's/"/\\"/g')\"}" \
                "$WEBHOOK_URL"

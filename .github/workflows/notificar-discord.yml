@@ -13,7 +13,7 @@ jobs:
       - name: Checar o código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # importante para pegar todo o histórico e múltiplos commits
+          fetch-depth: 0
 
       - name: Enviar notificação para o Discord
         env:
@@ -21,16 +21,19 @@ jobs:
           GITHUB_EVENT_BEFORE: ${{ github.event.before }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
-          # Pega todos os commits entre o commit antes do push e o atual
-          COMMITS=$(git log --pretty=format:"**🆔 Hash:** `%h`\n**👤 Usuario:** %an\n**💬 Mensagem:** %s\n\n" $GITHUB_EVENT_BEFORE..$GITHUB_SHA)
+          if [ "$GITHUB_EVENT_BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            COMMITS=$(git log -10 --pretty=format:"**🆔 Hash:** `%h`\n**👤 Usuario:** %an\n**💬 Mensagem:** %s\n\n")
+          else
+            COMMITS=$(git log --pretty=format:"**🆔 Hash:** `%h`\n**👤 Usuario:** %an\n**💬 Mensagem:** %s\n\n" $GITHUB_EVENT_BEFORE..$GITHUB_SHA)
+          fi
 
-          # Se não tiver commits, define uma mensagem padrão
           if [ -z "$COMMITS" ]; then
             COMMITS="Nenhum commit encontrado."
           fi
 
-          # Envia a mensagem pro Discord
+          COMMITS_ESCAPED=$(echo "$COMMITS" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
+
           curl -H "Content-Type: application/json" \
                -X POST \
-               -d "{\"content\": \"📌 **Novos Commits Recebidos:**\n\n$COMMITS—————————————————————\"}" \
+               -d "{\"content\": \"📌 **Novos Commits Recebidos:**\n\n$COMMITS_ESCAPED\n—————————————————————\"}" \
                $DISCORD_WEBHOOK_URL

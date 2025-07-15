@@ -23,7 +23,8 @@ jobs:
           COMMITS=$(git log --pretty=format:"%h|%an|%s" ${{ github.event.before }}..${{ github.sha }} 2>/dev/null || git log -1 --pretty=format:"%h|%an|%s")
 
           # Cabeçalho fixo
-          MESSAGE="📌 **Novo Push no Repositório!**"
+          MESSAGE="――――――――――――――――――"
+          MESSAGE+="\n📌 **Novo Push no Repositório!**"
           MESSAGE+="\n🌿 **Branch:** ${{ github.ref_name }}"
           MESSAGE+="\n🔢 **Total de Commits:** $(echo "$COMMITS" | wc -l)\n"
 

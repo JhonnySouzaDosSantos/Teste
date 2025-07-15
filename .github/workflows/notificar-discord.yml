@@ -15,29 +15,38 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Enviar notificação para o Discord
+      - name: Enviar notificação formatada
         env:
-          DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790"  # Substitua pelo seu URL real
+          DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790"
         run: |
-          # Obtém todos os commits do push
-          COMMITS=$(git log --pretty=format:"%h|%an|%s" ${{ github.event.before }}..${{ github.sha }} || git log -1 --pretty=format:"%h|%an|%s")
+          # Obtém commits de forma segura
+          COMMITS=$(git log --pretty=format:"%h|%an|%s" ${{ github.event.before }}..${{ github.sha }} 2>/dev/null || git log -1 --pretty=format:"%h|%an|%s")
 
-          # Monta a mensagem PRINCIPAL (título)
-          MESSAGE="📌 **Novo Push no Repositório!**\n🌿 **Branch:** ${{ github.ref_name }}\n🔢 **Total de Commits:** $(echo "$COMMITS" | wc -l)\n\n"
-          
+          # Cabeçalho fixo
+          MESSAGE="📌 **Novo Push no Repositório!**"
+          MESSAGE+="\n🌿 **Branch:** ${{ github.ref_name }}"
+          MESSAGE+="\n🔢 **Total de Commits:** $(echo "$COMMITS" | wc -l)\n"
+
+          # Processa cada commit
           while IFS='|' read -r HASH USER MSG; do
-            MESSAGE+="——————————————\n"
-            MESSAGE+="👤 **Usuário:** $USER\n"
-            MESSAGE+="🆔 **Hash:** \`$HASH\`\n"
-            MESSAGE+="💬 **Mensagem:** $MSG\n\n"
+            MESSAGE+="\n――――――――――――――――――"
+            MESSAGE+="\n👤 **Usuário:** $USER"
+            MESSAGE+="\n🆔 **Hash:** \`$HASH\`"
+            MESSAGE+="\n💬 **Mensagem:** $MSG"
           done <<< "$COMMITS"
 
-          # Remove caracteres inválidos (segurança extra)
-          MESSAGE_CLEANED=$(echo "$MESSAGE" | tr -cd '\11\12\15\40-\176')
+          # Remove TODOS os caracteres não-ASCII
+          MESSAGE_CLEAN=$(echo "$MESSAGE" | LC_ALL=C tr -dc '[:print:]\n')
 
-          # Envia para o Discord (com formatação JSON segura)
-          JSON_PAYLOAD=$(jq -n --arg content "$MESSAGE_CLEANED" '{content: $content}')
-          curl -H "Content-Type: application/json" \
-               -X POST \
-               -d "$JSON_PAYLOAD" \
-               "$DISCORD_WEBHOOK_URL"
+          # Envia usando Python para garantir o JSON perfeito
+          python3 -c "
+          import json, os
+          payload = {'content': os.environ.get('MESSAGE_CLEAN')}
+          import urllib.request
+          req = urllib.request.Request(
+              os.environ.get('DISCORD_WEBHOOK_URL'),
+              data=json.dumps(payload).encode('utf-8'),
+              headers={'Content-Type': 'application/json'}
+          )
+          urllib.request.urlopen(req)
+          "

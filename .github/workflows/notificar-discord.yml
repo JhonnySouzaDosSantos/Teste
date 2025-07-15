@@ -13,38 +13,33 @@ jobs:
       - name: Checar o código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Necessário para pegar histórico completo
+          fetch-depth: 0
 
       - name: Enviar notificação para o Discord
         env:
           DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790"  # Substitua pelo seu URL real
         run: |
-          # Obtém todos os commits do push atual (usando git log para comparar SHAs)
-          COMMITS=$(git log --pretty=format:"%h|%an|%s" ${{ github.event.before }}..${{ github.sha }})
+          # Obtém todos os commits do push
+          COMMITS=$(git log --pretty=format:"%h|%an|%s" ${{ github.event.before }}..${{ github.sha }} || git log -1 --pretty=format:"%h|%an|%s")
 
-          # Se for um push forçado ou sem histórico, pega apenas o último commit
-          if [ -z "$COMMITS" ]; then
-            COMMITS=$(git log -1 --pretty=format:"%h|%an|%s")
-          fi
-
-          # Contador de commits
-          TOTAL_COMMITS=$(echo "$COMMITS" | wc -l)
-
-          # Monta a mensagem principal
+          # Monta a mensagem PRINCIPAL (título)
           MESSAGE="📌 **Novo Push no Repositório!**\n"
-          MESSAGE+="🔢 **Total de Commits:** $TOTAL_COMMITS\n"
-          MESSAGE+="🌿 **Branch:** ${{ github.ref_name }}\n\n"
+          MESSAGE+="🌿 **Branch:** ${{ github.ref_name }}\n"
+          MESSAGE+="🔢 **Total de Commits:** $(echo "$COMMITS" | wc -l)\n\n"
 
-          # Adiciona detalhes de CADA commit
+          # Processa CADA commit (formato limpo)
           while IFS='|' read -r HASH USER MSG; do
             MESSAGE+="——————————————\n"
-            MESSAGE+="👤 **Usuario:** $USER\n"
+            MESSAGE+="👤 **Usuário:** $USER\n"
             MESSAGE+="🆔 **Hash:** \`$HASH\`\n"
             MESSAGE+="💬 **Mensagem:** $MSG\n\n"
           done <<< "$COMMITS"
 
-          # Envia para o Discord (usando jq para evitar problemas de formatação)
-          JSON_PAYLOAD=$(jq -n --arg content "$MESSAGE" '{content: $content}')
+          # Remove caracteres inválidos (segurança extra)
+          MESSAGE_CLEANED=$(echo "$MESSAGE" | tr -cd '\11\12\15\40-\176')
+
+          # Envia para o Discord (com formatação JSON segura)
+          JSON_PAYLOAD=$(jq -n --arg content "$MESSAGE_CLEANED" '{content: $content}')
           curl -H "Content-Type: application/json" \
                -X POST \
                -d "$JSON_PAYLOAD" \

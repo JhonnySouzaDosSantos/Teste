@@ -1,0 +1,92 @@
+name: Notificar Pull Requests no Discord
+
+on:
+  pull_request:
+    types: [opened, closed, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted]
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  notificar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enviar para Discord
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_PR_WEBHOOK }}
+        run: |
+          # Determina o tipo de evento
+          EVENT_NAME=${{ github.event_name }}
+          ACTION=${{ github.event.action }}
+          
+          # Mensagem base
+          MESSAGE="🚀 **Atividade em Pull Request**\n"
+          
+          # Dados comuns
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            PR_URL=${{ github.event.pull_request.html_url }}
+            PR_TITLE=${{ github.event.pull_request.title }}
+            AUTHOR=${{ github.event.pull_request.user.login }}
+            BRANCH="${{ github.event.pull_request.head.ref }} → ${{ github.event.pull_request.base.ref }}"
+            
+            MESSAGE+="🔹 **Título:** [$PR_TITLE]($PR_URL)\n"
+            MESSAGE+="🔹 **Autor:** $AUTHOR\n"
+            MESSAGE+="🌿 **Branch:** $BRANCH\n"
+            
+            case $ACTION in
+              "opened")
+                MESSAGE+="🟢 **PR Aberto**\n"
+                ;;
+              "reopened")
+                MESSAGE+="🟠 **PR Reaberto**\n"
+                ;;
+              "closed")
+                if [ "${{ github.event.pull_request.merged }}" = "true" ]; then
+                  MESSAGE+="🟣 **PR Mergeado!**\n"
+                else
+                  MESSAGE+="🔴 **PR Fechado**\n"
+                fi
+                ;;
+              "ready_for_review")
+                MESSAGE+="🟡 **PR Pronto para Revisão**\n"
+                ;;
+            esac
+          
+          elif [ "$EVENT_NAME" = "pull_request_review" ]; then
+            PR_URL=${{ github.event.pull_request.html_url }}
+            PR_TITLE=${{ github.event.pull_request.title }}
+            REVIEWER=${{ github.event.review.user.login }}
+            STATE=${{ github.event.review.state }}
+            
+            MESSAGE+="🔹 **Título:** [$PR_TITLE]($PR_URL)\n"
+            MESSAGE+="🔹 **Revisor:** $REVIEWER\n"
+            
+            case $STATE in
+              "approved")
+                MESSAGE+="✅ **Aprovação**\n"
+                ;;
+              "changes_requested")
+                MESSAGE+="✏️ **Alterações solicitadas**\n"
+                ;;
+              "commented")
+                MESSAGE+="💬 **Comentário na revisão**\n"
+                ;;
+            esac
+          
+          elif [ "$EVENT_NAME" = "pull_request_review_comment" ]; then
+            PR_URL=${{ github.event.pull_request.html_url }}
+            PR_TITLE=${{ github.event.pull_request.title }}
+            COMMENTER=${{ github.event.comment.user.login }}
+            COMMENT=$(echo "${{ github.event.comment.body }}" | head -c 100)
+            
+            MESSAGE+="🔹 **Título:** [$PR_TITLE]($PR_URL)\n"
+            MESSAGE+="🔹 **Comentário de:** $COMMENTER\n"
+            MESSAGE+="💬 **Comentário:** ${COMMENT}...\n"
+          fi
+
+          # Envia para o Discord
+          curl -X POST \
+               -H "Content-Type: application/json" \
+               -d "{\"content\":\"$MESSAGE\"}" \
+               "$WEBHOOK_URL"

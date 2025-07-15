@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checar o código
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Enviar notificação para o Discord
         run: |
@@ -21,8 +23,7 @@ jobs:
           BRANCH_NAME=${GITHUB_REF##*/}
           COMMIT_NUMBER=$(git rev-list --count HEAD)
 
-
           curl -H "Content-Type: application/json" \
           -X POST \
-           -d "{\"content\": \"**📌 Novo Commit!**\n\n**👤 Usuario:** $COMMIT_USER\n\n**🆔 Hash do Commit:** \`$COMMIT_HASH\`\n\n**🔢 Numero do Commit:** $COMMIT_NUMBER\n\n**💬 Mensagem:** $COMMIT_MSG\n\n**🌿 Branch:** $BRANCH_NAME\n\n—————————————————————\"}" \
+          -d "{\"content\": \"**📌 Novo Commit!**\n\n**👤 Usuario:** $COMMIT_USER\n\n**🆔 Hash do Commit:** \`$COMMIT_HASH\`\n\n**🔢 Numero do Commit:** $COMMIT_NUMBER\n\n**💬 Mensagem:** $COMMIT_MSG\n\n**🌿 Branch:** $BRANCH_NAME\n\n—————————————————————\"}" \
           https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790

@@ -14,29 +14,26 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.DISCORD_ISSUES_WEBHOOK }}
         run: |
-          # Dados básicos da issue
-          ISSUE_URL="${{ github.event.issue.html_url }}"
-          ISSUE_TITLE="${{ github.event.issue.title }}"
-          USER="${{ github.event.issue.user.login }}"
+          # Dados da Issue
+          EVENT_TYPE=${{ github.event.action }}
+          ISSUE_URL=${{ github.event.issue.html_url }}
+          ISSUE_TITLE=${{ github.event.issue.title }}
+          USER=${{ github.event.issue.user.login }}
 
           # Mensagem base
           MESSAGE="📢 **Nova Atividade em Issues**\n"
+          MESSAGE+="🔹 **Tipo:** \`$EVENT_TYPE\`\n"
           MESSAGE+="🔹 **Título:** [$ISSUE_TITLE]($ISSUE_URL)\n"
           MESSAGE+="🔹 **Autor:** $USER\n"
 
-          # Verifica o tipo de evento
-          if [ "${{ github.event_name }}" = "issues" ]; then
-            MESSAGE+="🔹 **Tipo:** \`${{ github.event.action }}\`\n"
-          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
-            MESSAGE+="🔹 **Tipo:** \`comment\`\n"
-            # Escapa o comentário para evitar problemas com espaços/caracteres especiais
-            COMMENT="${{ github.event.comment.body }}"
+          # Se for um comentário
+          if [ "$EVENT_TYPE" = "created" ]; then
+            COMMENT=${{ github.event.comment.body }}
             MESSAGE+="💬 **Comentário:** ${COMMENT:0:100}...\n"  # Limita a 100 chars
           fi
 
-          # Envia para o Discord (com escape seguro de JSON)
-          ESCAPED_MESSAGE=$(echo "$MESSAGE" | jq -Rs . | sed 's/^"//; s/"$//')
+          # Envia
           curl -X POST \
                -H "Content-Type: application/json" \
-               -d "{\"content\":$ESCAPED_MESSAGE}" \
+               -d "{\"content\":\"$MESSAGE\"}" \
                "$WEBHOOK_URL"

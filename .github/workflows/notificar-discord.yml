@@ -3,7 +3,7 @@ name: Notificar no Discord
 on:
   push:
     branches:
-      - main  # ou a branch que você quiser monitorar
+      - '**' # ou a branch que você quiser monitorar
 
 jobs:
   enviar-mensagem:
@@ -12,7 +12,8 @@ jobs:
     steps:
       - name: Enviar notificação para o Discord
         run: |
+          COMMIT_MSG=$(git log -1 --pretty=format:"%s")
           curl -H "Content-Type: application/json" \
           -X POST \
-          -d "{\"content\": \"🚀 Um novo push foi feito no repositório!\"}" \
+          -d "{\"content\": \"📝 Novo commit no repositório: $COMMIT_MSG\"}" \
           https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790

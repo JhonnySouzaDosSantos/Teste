@@ -35,18 +35,9 @@ jobs:
             MESSAGE+="\n💬 **Mensagem:** $MSG"
           done <<< "$COMMITS"
 
-          # Remove TODOS os caracteres não-ASCII
-          MESSAGE_CLEAN=$(echo "$MESSAGE" | LC_ALL=C tr -dc '[:print:]\n')
-
-          # Envia usando Python para garantir o JSON perfeito
-          python3 -c "
-          import json, os
-          payload = {'content': os.environ.get('MESSAGE_CLEAN')}
-          import urllib.request
-          req = urllib.request.Request(
-              os.environ.get('DISCORD_WEBHOOK_URL'),
-              data=json.dumps(payload).encode('utf-8'),
-              headers={'Content-Type': 'application/json'}
-          )
-          urllib.request.urlopen(req)
-          "
+          # Envia usando curl com tratamento de erro
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d "{\"content\":\"$MESSAGE\"}" \
+               "$DISCORD_WEBHOOK_URL" \
+               || echo "❗ Erro ao enviar para o Discord (Status code: $?)"

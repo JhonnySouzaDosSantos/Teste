@@ -25,9 +25,9 @@ jobs:
 
           # Verifica commits entre o before e o SHA atual
           if [ "$GITHUB_EVENT_BEFORE" = "0000000000000000000000000000000000000000" ]; then
-            COMMITS=$(git log -10 --pretty=format:"%h|%an|%s")
+            COMMITS=$(git log -10 --pretty=format:"%h|%an|%s%n")
           else
-            COMMITS=$(git log --pretty=format:"%h|%an|%s" $GITHUB_EVENT_BEFORE..$GITHUB_SHA)
+            COMMITS=$(git log --pretty=format:"%h|%an|%s%n" $GITHUB_EVENT_BEFORE..$GITHUB_SHA)
           fi
 
           if [ -z "$COMMITS" ]; then
@@ -45,7 +45,7 @@ jobs:
             MSG=$(echo "$line" | cut -d'|' -f3)
 
             MESSAGE="$MESSAGE\n📌 **Novo Commit!**\n\n👤 **Usuario:** $USER\n\n🆔 **Hash do Commit:** \`$HASH\`\n\n🔢 **Numero do Commit:** $COUNT\n\n💬 **Mensagem:** $MSG\n\n🌿 **Branch:** $GITHUB_REF_NAME\n—————————————————————\n"
-            
+
             COUNT=$((COUNT+1))
           done <<< "$COMMITS"
 

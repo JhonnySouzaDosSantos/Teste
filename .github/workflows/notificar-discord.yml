@@ -32,7 +32,7 @@ jobs:
           while IFS='|' read -r HASH USER MSG; do
             MESSAGE+="\n👤 **Usuário:** $USER"
             MESSAGE+="\n🆔 **Hash:** \`$HASH\`"
-            MESSAGE+="\n💬 **Mensagem:** $MSG"
+            MESSAGE+="\n💬 **Mensagem:** $MSG\n"
             MESSAGE+="\n――――――――――――――――――"
           done <<< "$COMMITS"
 

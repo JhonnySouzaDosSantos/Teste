@@ -44,7 +44,7 @@ jobs:
             USER=$(echo "$line" | cut -d'|' -f2)
             MSG=$(echo "$line" | cut -d'|' -f3)
 
-            MESSAGE="$MESSAGE\n📌 **Novo Commit!**\n\n👤 **Usuario:** $USER\n\n🆔 **Hash do Commit:** \`$HASH\`\n\n🔢 **Numero do Commit:** $COUNT\n\n💬 **Mensagem:** $MSG\n\n🌿 **Branch:** $GITHUB_REF_NAME\n—————————————————————\n"
+            MESSAGE="$MESSAGE\n📌 **Novo Commit!**\n\n👤 **Usuario:** $USER\n\n🆔 **Hash do Commit:** \`$HASH\`\n\n🔢 **Quantidade de Commits:** $COUNT\n\n💬 **Mensagem:** $MSG\n\n🌿 **Branch:** $GITHUB_REF_NAME\n—————————————————————\n"
 
             COUNT=$((COUNT+1))
           done <<< "$COMMITS"

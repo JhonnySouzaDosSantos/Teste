@@ -1,0 +1,18 @@
+name: Notificar no Discord
+
+on:
+  push:
+    branches:
+      - main  # ou a branch que você quiser monitorar
+
+jobs:
+  enviar-mensagem:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Enviar notificação para o Discord
+        run: |
+          curl -H "Content-Type: application/json" \
+          -X POST \
+          -d "{\"content\": \"🚀 Um novo push foi feito no repositório!\"}" \
+          https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790

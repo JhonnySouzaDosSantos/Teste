@@ -16,10 +16,13 @@ jobs:
       - name: Enviar notificação para o Discord
         run: |
           COMMIT_USER=$(git log -1 --pretty=format:"%an")
-          COMMIT_MSG=$(git log -1 --pretty=format:"%s")
-          BRANCH_NAME=$(echo "${GITHUB_REF#refs/heads/}")
           COMMIT_HASH=$(git log -1 --pretty=format:"%h")
+          COMMIT_MSG=$(git log -1 --pretty=format:"%s")
+          BRANCH_NAME=${GITHUB_REF##*/}
+          COMMIT_NUMBER=$(git rev-list --count HEAD)
+
+
           curl -H "Content-Type: application/json" \
           -X POST \
-           -d "{\"content\": \"**📌 Novo Commit!**\n\n**👤 Usuario:** $COMMIT_USER\n\n**🔢 Commit:** \`$COMMIT_HASH\`\n\n**💬 Mensagem:** $COMMIT_MSG\n\n**🌿 Branch:** $BRANCH_NAME\n\n—————————————————————\"}" \
+           -d "{\"content\": \"**📌 Novo Commit!**\n\n**👤 Usuario:** $COMMIT_USER\n\n**🆔 Hash do Commit:** \`$COMMIT_HASH\`\n\n**🔢 Numero do Commit:** $COMMIT_NUMBER\n\n**💬 Mensagem:** $COMMIT_MSG\n\n**🌿 Branch:** $BRANCH_NAME\n\n—————————————————————\"}" \
           https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790

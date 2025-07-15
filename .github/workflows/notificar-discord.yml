@@ -17,21 +17,23 @@ jobs:
 
       - name: Enviar notificação para o Discord
         env:
-          DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790"  # Substitua pelo seu URL real
+          DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/SEU_WEBHOOK_AQUI"  # Substitua pelo seu URL real
         run: |
-          # Obtém a hora atual no formato "5 AM" (sem zeros à esquerda)
-          CURRENT_TIME=$(date +"%-I %p" | tr '[:upper:]' '[:lower:]')
-
-          # Obtém o último commit
+          # Obtém os dados do último commit
           HASH=$(git log -1 --pretty=format:"%h")
           USER=$(git log -1 --pretty=format:"%an")
           MSG=$(git log -1 --pretty=format:"%s")
           BRANCH="${{ github.ref_name }}"
 
-          # Formata a mensagem EXATAMENTE como no exemplo
-          MESSAGE="$CURRENT_TIME\n\nNovo Commit\nUsuario: $USER\n\nID Hash do Commit: [$HASH]\nQuantidade de Commits: 1\nMensagem: $MSG\nBranch: $BRANCH"
+          # Formata a mensagem COM EMOJIS (sem horário)
+          MESSAGE="📌 **Novo Commit!**
+          👤 **Usuario:** $USER
+          🆔 **ID Hash do Commit:** \`$HASH\`
+          🔢 **Quantidade de Commits:** 1
+          💬 **Mensagem:** $MSG
+          🌿 **Branch:** $BRANCH"
 
-          # Envia para o Discord (usando jq para evitar problemas com quebras de linha)
+          # Envia para o Discord (usando jq para formatar o JSON)
           JSON_PAYLOAD=$(jq -n --arg content "$MESSAGE" '{content: $content}')
           curl -H "Content-Type: application/json" \
                -X POST \

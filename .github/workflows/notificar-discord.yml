@@ -17,7 +17,7 @@ jobs:
 
       - name: Enviar notificação formatada
         env:
-          DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790"
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
           # Obtém commits de forma segura
           COMMITS=$(git log --pretty=format:"%h|%an|%s" ${{ github.event.before }}..${{ github.sha }} 2>/dev/null || git log -1 --pretty=format:"%h|%an|%s")

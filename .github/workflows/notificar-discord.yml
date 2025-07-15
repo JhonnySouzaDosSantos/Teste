@@ -26,11 +26,11 @@ jobs:
           MESSAGE="\n📌 **Novo Push no Repositório!**"
           MESSAGE+="\n🌿 **Branch:** ${{ github.ref_name }}"
           MESSAGE+="\n🔢 **Total de Commits:** $(echo "$COMMITS" | wc -l)"
-          MESSAGE+="\n――――――――――――――――――\n"
+          MESSAGE+="\n――――――――――――――――――"
 
           # Processa cada commit
           while IFS='|' read -r HASH USER MSG; do
-            MESSAGE+="\n👤 **Usuário:** $USER"
+            MESSAGE+="\n\n👤 **Usuário:** $USER"
             MESSAGE+="\n🆔 **Hash:** \`$HASH\`"
             MESSAGE+="\n💬 **Mensagem:** $MSG\n"
             MESSAGE+="\n――――――――――――――――――"

@@ -45,12 +45,12 @@ jobs:
             MSG_ESCAPED=$(echo "$MSG" | sed 's/"/\\"/g')
 
             MESSAGE="${MESSAGE}📌 **Novo Commit!**\\n\
-👤 **Usuario:** $USER\\n\
-🆔 **Hash do Commit:** \`$HASH\`\\n\
-🔢 **Quantidade de Commits:** $COUNT\\n\
-💬 **Mensagem:** $MSG_ESCAPED\\n\
-🌿 **Branch:** $GITHUB_REF_NAME\\n\
-—————————————————————\\n"
+          👤 **Usuario:** $USER\\n\
+          🆔 **Hash do Commit:** \`$HASH\`\\n\
+          🔢 **Quantidade de Commits:** $COUNT\\n\
+          💬 **Mensagem:** $MSG_ESCAPED\\n\
+          🌿 **Branch:** $GITHUB_REF_NAME\\n\
+          —————————————————————\\n"
 
             COUNT=$((COUNT+1))
           done <<< "$COMMITS"

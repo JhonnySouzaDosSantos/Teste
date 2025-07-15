@@ -14,10 +14,10 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.DISCORD_ISSUES_WEBHOOK }}
         run: |
-          # Dados básicos da issue (compatível com ambos os eventos)
-          ISSUE_URL=${{ github.event.issue.html_url }}
-          ISSUE_TITLE=${{ github.event.issue.title }}
-          USER=${{ github.event.issue.user.login }}
+          # Dados básicos da issue
+          ISSUE_URL="${{ github.event.issue.html_url }}"
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          USER="${{ github.event.issue.user.login }}"
 
           # Mensagem base
           MESSAGE="📢 **Nova Atividade em Issues**\n"
@@ -26,17 +26,17 @@ jobs:
 
           # Verifica o tipo de evento
           if [ "${{ github.event_name }}" = "issues" ]; then
-            # Evento de abertura/fechamento/reabertura
             MESSAGE+="🔹 **Tipo:** \`${{ github.event.action }}\`\n"
           elif [ "${{ github.event_name }}" = "issue_comment" ]; then
-            # Evento de comentário
             MESSAGE+="🔹 **Tipo:** \`comment\`\n"
-            COMMENT=${{ github.event.comment.body }}
+            # Escapa o comentário para evitar problemas com espaços/caracteres especiais
+            COMMENT="${{ github.event.comment.body }}"
             MESSAGE+="💬 **Comentário:** ${COMMENT:0:100}...\n"  # Limita a 100 chars
           fi
 
-          # Envia para o Discord
+          # Envia para o Discord (com escape seguro de JSON)
+          ESCAPED_MESSAGE=$(echo "$MESSAGE" | jq -Rs . | sed 's/^"//; s/"$//')
           curl -X POST \
                -H "Content-Type: application/json" \
-               -d "{\"content\":\"$(echo "$MESSAGE" | sed 's/"/\\"/g')\"}" \
+               -d "{\"content\":$ESCAPED_MESSAGE}" \
                "$WEBHOOK_URL"

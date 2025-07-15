@@ -30,8 +30,9 @@ jobs:
 
           # Processa cada commit
           while IFS='|' read -r HASH USER MSG; do
+            COMMIT_URL="https://github.com/${{ github.repository }}/commit/$HASH"
             MESSAGE+="\n\n👤 **Usuário:** $USER"
-            MESSAGE+="\n🆔 **Hash:** \`$HASH\`"
+            MESSAGE+="\n🆔 **Hash:** [\`$HASH\`]($COMMIT_URL)"
             MESSAGE+="\n💬 **Mensagem:** $MSG\n"
             MESSAGE+="\n――――――――――――――――――"
           done <<< "$COMMITS"

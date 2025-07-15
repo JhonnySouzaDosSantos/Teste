@@ -2,43 +2,58 @@ name: Notificar Issues no Discord
 
 on:
   issues:
-    types: [opened, closed, reopened]
+    types: [opened, edited, closed, reopened]
   issue_comment:
-    types: [created]
+    types: [created, edited]
 
 jobs:
-  notificar:
+  notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Enviar para Discord
+      - name: Enviar notificação
         env:
           WEBHOOK_URL: ${{ secrets.DISCORD_ISSUES_WEBHOOK }}
+          EVENT_TYPE: ${{ github.event.action }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ toJSON(github.event.issue.body) }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          USER: ${{ github.event.issue.user.login }}
         run: |
-          # Dados da Issue
-          EVENT_TYPE=${{ github.event.action }}
-          ISSUE_URL=${{ github.event.issue.html_url }}
-          ISSUE_TITLE=${{ github.event.issue.title }}
-          ISSUE_BODY=${{ github.event.issue.body }}
-          USER=${{ github.event.issue.user.login }}
-
-          # Formata a mensagem
-          MESSAGE="📢 **Nova Issue**\n"
+          # Configura a mensagem base
+          MESSAGE="📢 **Nova Atividade em Issue**\n"
           MESSAGE+="🔹 **Tipo:** \`$EVENT_TYPE\`\n"
           MESSAGE+="🔹 **Título:** [$ISSUE_TITLE]($ISSUE_URL)\n"
           MESSAGE+="🔹 **Autor:** $USER\n\n"
           MESSAGE+="**Descrição:**\n"
-          MESSAGE+="\`\`\`\n${ISSUE_BODY}\n\`\`\`\n"
+
+          # Adiciona a descrição (tratando caracteres especiais)
+          CLEAN_BODY=$(echo "$ISSUE_BODY" | sed -e 's/^"//' -e 's/"$//' -e 's/\\"/"/g')
+          MESSAGE+="$CLEAN_BODY\n\n"
 
           # Se for um comentário
-          if [ "$EVENT_TYPE" = "created" ]; then
-            COMMENT=${{ github.event.comment.body }}
-            MESSAGE+="💬 **Comentário:** \n\`\`\`\n${COMMENT}\n\`\`\`"
+          if [[ "$EVENT_TYPE" == "created" || "$EVENT_TYPE" == "edited" ]]; then
+            COMMENT=${{ toJSON(github.event.comment.body) }}
+            CLEAN_COMMENT=$(echo "$COMMENT" | sed -e 's/^"//' -e 's/"$//' -e 's/\\"/"/g')
+            MESSAGE+="💬 **Comentário:**\n$CLEAN_COMMENT\n"
           fi
 
-          # Envia para o Discord (usando Python para evitar problemas de formatação)
+          # Envia usando Python para garantir o formato
           python3 -c "
           import os, json, requests
-          webhook_url = os.environ['WEBHOOK_URL']
-          payload = {'content': os.environ.get('MESSAGE')}
-          requests.post(webhook_url, json=payload)
+          from urllib.parse import quote
+          
+          message = os.environ.get('MESSAGE')
+          webhook_url = os.environ.get('WEBHOOK_URL')
+          
+          payload = {
+              'content': message,
+              'allowed_mentions': {'parse': []}
+          }
+          
+          try:
+              response = requests.post(webhook_url, json=payload)
+              response.raise_for_status()
+              print('Notificação enviada com sucesso!')
+          except Exception as e:
+              print(f'Erro ao enviar: {str(e)}')
           "

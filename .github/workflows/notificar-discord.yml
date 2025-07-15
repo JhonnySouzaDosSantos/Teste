@@ -13,17 +13,24 @@ jobs:
       - name: Checar o código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # importante para pegar todo o histórico e múltiplos commits
 
       - name: Enviar notificação para o Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+          GITHUB_SHA: ${{ github.sha }}
         run: |
-          COMMIT_USER=$(git log -1 --pretty=format:"%an")
-          COMMIT_HASH=$(git log -1 --pretty=format:"%h")
-          COMMIT_MSG=$(git log -1 --pretty=format:"%s")
-          BRANCH_NAME=${GITHUB_REF##*/}
-          COMMIT_NUMBER=$(git rev-list --count HEAD)
+          # Pega todos os commits entre o commit antes do push e o atual
+          COMMITS=$(git log --pretty=format:"**🆔 Hash:** `%h`\n**👤 Usuario:** %an\n**💬 Mensagem:** %s\n\n" $GITHUB_EVENT_BEFORE..$GITHUB_SHA)
 
+          # Se não tiver commits, define uma mensagem padrão
+          if [ -z "$COMMITS" ]; then
+            COMMITS="Nenhum commit encontrado."
+          fi
+
+          # Envia a mensagem pro Discord
           curl -H "Content-Type: application/json" \
-          -X POST \
-          -d "{\"content\": \"**📌 Novo Commit!**\n\n**👤 Usuario:** $COMMIT_USER\n\n**🆔 Hash do Commit:** \`$COMMIT_HASH\`\n\n**🔢 Numero do Commit:** $COMMIT_NUMBER\n\n**💬 Mensagem:** $COMMIT_MSG\n\n**🌿 Branch:** $BRANCH_NAME\n\n—————————————————————\"}" \
-          https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790
+               -X POST \
+               -d "{\"content\": \"📌 **Novos Commits Recebidos:**\n\n$COMMITS—————————————————————\"}" \
+               $DISCORD_WEBHOOK_URL

@@ -13,27 +13,37 @@ jobs:
       - name: Checar o código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Necessário para pegar histórico completo
 
       - name: Enviar notificação para o Discord
         env:
           DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790"  # Substitua pelo seu URL real
         run: |
-          # Obtém os dados do último commit
-          HASH=$(git log -1 --pretty=format:"%h")
-          USER=$(git log -1 --pretty=format:"%an")
-          MSG=$(git log -1 --pretty=format:"%s")
-          BRANCH="${{ github.ref_name }}"
+          # Obtém todos os commits do push atual (usando git log para comparar SHAs)
+          COMMITS=$(git log --pretty=format:"%h|%an|%s" ${{ github.event.before }}..${{ github.sha }})
 
-          # Formata a mensagem COM EMOJIS (sem horário)
-          MESSAGE="📌 **Novo Commit!**
-          👤 **Usuario:** $USER
-          🆔 **ID Hash do Commit:** \`$HASH\`
-          🔢 **Quantidade de Commits:** 1
-          💬 **Mensagem:** $MSG
-          🌿 **Branch:** $BRANCH"
+          # Se for um push forçado ou sem histórico, pega apenas o último commit
+          if [ -z "$COMMITS" ]; then
+            COMMITS=$(git log -1 --pretty=format:"%h|%an|%s")
+          fi
 
-          # Envia para o Discord (usando jq para formatar o JSON)
+          # Contador de commits
+          TOTAL_COMMITS=$(echo "$COMMITS" | wc -l)
+
+          # Monta a mensagem principal
+          MESSAGE="📌 **Novo Push no Repositório!**\n"
+          MESSAGE+="🔢 **Total de Commits:** $TOTAL_COMMITS\n"
+          MESSAGE+="🌿 **Branch:** ${{ github.ref_name }}\n\n"
+
+          # Adiciona detalhes de CADA commit
+          while IFS='|' read -r HASH USER MSG; do
+            MESSAGE+="——————————————\n"
+            MESSAGE+="👤 **Usuario:** $USER\n"
+            MESSAGE+="🆔 **Hash:** \`$HASH\`\n"
+            MESSAGE+="💬 **Mensagem:** $MSG\n\n"
+          done <<< "$COMMITS"
+
+          # Envia para o Discord (usando jq para evitar problemas de formatação)
           JSON_PAYLOAD=$(jq -n --arg content "$MESSAGE" '{content: $content}')
           curl -H "Content-Type: application/json" \
                -X POST \

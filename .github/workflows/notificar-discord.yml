@@ -21,5 +21,5 @@ jobs:
           COMMIT_HASH=$(git log -1 --pretty=format:"%h")
           curl -H "Content-Type: application/json" \
           -X POST \
-          -d "{\"content\": \"Usuario: $COMMIT_USER\nCommit: $COMMIT_HASH\nMensagem: $COMMIT_MSG\nBranch: $BRANCH_NAME\n-----------\"}" \
+          -d "{\"content\": \"**📌 Novo Commit Recebido!**\n\n**👤 Usuario:** $COMMIT_USER\n**🔢 Commit:** \`$COMMIT_HASH\`\n**💬 Mensagem:** $COMMIT_MSG\n**🌿 Branch:** $BRANCH_NAME\n\n—————————————————————\"}" \
           https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790

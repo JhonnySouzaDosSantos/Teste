@@ -17,7 +17,7 @@ jobs:
 
       - name: Enviar notificação para o Discord
         env:
-          DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/SEU_WEBHOOK_AQUI"  # Substitua pelo seu URL real
+          DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790"  # Substitua pelo seu URL real
         run: |
           # Obtém os dados do último commit
           HASH=$(git log -1 --pretty=format:"%h")

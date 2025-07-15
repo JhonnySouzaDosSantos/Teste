@@ -15,23 +15,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Enviar notificação para o Discord
+      - name: Enviar notificação formatada
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
-          GITHUB_SHA: ${{ github.sha }}
+          DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1394547222389194762/Q7b3I0tLxsbxQNiP9jRZQQx7uGx-9sVMcIrcItoIurbnidX9RlUG3I1a25eOyZZasFAl?thread_id=1394542894626377790"
         run: |
-          if [ "$GITHUB_EVENT_BEFORE" = "0000000000000000000000000000000000000000" ]; then
-            COMMITS=$(git log -10 --pretty=format:"**🆔 Hash:** `%h`\n**👤 Usuario:** %an\n**💬 Mensagem:** %s\n\n")
-          else
-            COMMITS=$(git log --pretty=format:"**🆔 Hash:** `%h`\n**👤 Usuario:** %an\n**💬 Mensagem:** %s\n\n" $GITHUB_EVENT_BEFORE..$GITHUB_SHA)
-          fi
-
-          if [ -z "$COMMITS" ]; then
-            COMMITS="Nenhum commit encontrado."
-          fi
-
-          COMMITS_ESCAPED=$(echo "$COMMITS" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
+          # Obtém commits de forma segura
+          COMMITS=$(git log --pretty=format:"%h|%an|%s" ${{ github.event.before }}..${{ github.sha }} 2>/dev/null || git log -1 --pretty=format:"%h|%an|%s")
 
           # Cabeçalho fixo
           MESSAGE="📌 **Novo Push no Repositório!**"
@@ -49,5 +38,6 @@ jobs:
           # Envia usando curl com tratamento de erro
           curl -H "Content-Type: application/json" \
                -X POST \
-               -d "{\"content\": \"📌 **Novos Commits Recebidos:**\n\n$COMMITS_ESCAPED\n—————————————————————\"}" \
-               $DISCORD_WEBHOOK_URL
+               -d "{\"content\":\"$MESSAGE\"}" \
+               "$DISCORD_WEBHOOK_URL" \
+               || echo "❗ Erro ao enviar para o Discord (Status code: $?)"

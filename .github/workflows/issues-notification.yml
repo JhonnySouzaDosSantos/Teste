@@ -39,6 +39,7 @@ jobs:
           fi
 
           # Construir mensagem base
+          MESSAGE+="\n――――――――――――――――――"
           MESSAGE="📢 **Atividade em Issues**\n"
           MESSAGE+="🔹 **Tipo:** \`$EVENT_TYPE\`\n"
           MESSAGE+="🔹 **Título:** [$ISSUE_TITLE]($ISSUE_URL)\n"
@@ -48,20 +49,25 @@ jobs:
           case $EVENT_TYPE in
             "opened")
               MESSAGE+="🟢 **Issue aberta**\n"
+              MESSAGE+="\n――――――――――――――――――"
               ;;
             "closed")
               MESSAGE+="🔴 **Issue fechada**\n"
+              MESSAGE+="\n――――――――――――――――――"
               ;;
             "reopened")
               MESSAGE+="🟠 **Issue reaberta**\n"
+              MESSAGE+="\n――――――――――――――――――"
               ;;
             "state_change_with_comment")
               MESSAGE+="🔄 **Issue $STATE_CHANGE com comentário**\n"
               MESSAGE+="💬 **Comentário:** ${COMMENT:0:100}...\n"
+              MESSAGE+="\n――――――――――――――――――"
               ;;
             "comment")
               MESSAGE+="💬 **Novo comentário**\n"
               MESSAGE+="📝 ${COMMENT:0:100}...\n"
+              MESSAGE+="\n――――――――――――――――――"
               ;;
           esac
 

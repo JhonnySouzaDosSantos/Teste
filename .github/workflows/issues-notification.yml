@@ -39,8 +39,7 @@ jobs:
           fi
 
           # Construir mensagem base
-          MESSAGE="\n――――――――――――――――――"
-          MESSAGE+="\n📢 **Atividade em Issues**\n"
+          MESSAGE="📢 **Atividade em Issues**\n"
           MESSAGE+="🔹 **Tipo:** \`$EVENT_TYPE\`\n"
           MESSAGE+="🔹 **Título:** [$ISSUE_TITLE]($ISSUE_URL)\n"
           MESSAGE+="🔹 **Autor:** $USER\n"

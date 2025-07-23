@@ -1,0 +1,77 @@
+name: Notificar Issues no Discord
+
+on:
+  issues:
+    types: [opened, closed, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  notificar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enviar para Discord
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_ISSUES_WEBHOOK }}
+        run: |
+          # Determina o tipo de evento
+          if [ "${{ github.event_name }}" = "issue_comment" ]; then
+            # Evento de comentário
+            EVENT_TYPE="comment"
+            ISSUE_URL=${{ github.event.issue.html_url }}
+            ISSUE_TITLE=${{ github.event.issue.title }}
+            USER=${{ github.event.comment.user.login }}
+            COMMENT=${{ github.event.comment.body }}
+            ACTION=${{ github.event.action }}
+            STATE=${{ github.event.issue.state }}
+            
+            # Se a issue foi fechada/reaberta com este comentário
+            if [ "$ACTION" = "created" ] && [ "${{ github.event.issue.state }}" != "${{ github.event.issue.state_prev }}" ]; then
+              EVENT_TYPE="state_change_with_comment"
+              STATE_CHANGE=${{ github.event.issue.state }}
+            fi
+          else
+            # Evento de issue normal
+            EVENT_TYPE=${{ github.event.action }}
+            ISSUE_URL=${{ github.event.issue.html_url }}
+            ISSUE_TITLE=${{ github.event.issue.title }}
+            USER=${{ github.event.issue.user.login }}
+          fi
+
+          # Construir mensagem base
+          MESSAGE="📢 **Atividade em Issues**\n"
+          MESSAGE+="🔹 **Tipo:** \`$EVENT_TYPE\`\n"
+          MESSAGE+="🔹 **Título:** [$ISSUE_TITLE]($ISSUE_URL)\n"
+          MESSAGE+="🔹 **Autor:** $USER\n"
+
+          # Adicionar informações específicas
+          case $EVENT_TYPE in
+            "opened")
+              MESSAGE+="🟢 **Issue aberta**\n"
+              MESSAGE+="\n――――――――――――――――――"
+              ;;
+            "closed")
+              MESSAGE+="🔴 **Issue fechada**\n"
+              MESSAGE+="\n――――――――――――――――――"
+              ;;
+            "reopened")
+              MESSAGE+="🟠 **Issue reaberta**\n"
+              MESSAGE+="\n――――――――――――――――――"
+              ;;
+            "state_change_with_comment")
+              MESSAGE+="🔄 **Issue $STATE_CHANGE com comentário**\n"
+              MESSAGE+="💬 **Comentário:** ${COMMENT:0:100}...\n"
+              MESSAGE+="\n――――――――――――――――――"
+              ;;
+            "comment")
+              MESSAGE+="💬 **Novo comentário**\n"
+              MESSAGE+="📝 ${COMMENT:0:100}...\n"
+              MESSAGE+="\n――――――――――――――――――"
+              ;;
+          esac
+
+          # Envia para o Discord
+          curl -X POST \
+               -H "Content-Type: application/json" \
+               -d "{\"content\":\"$MESSAGE\"}" \
+               "$WEBHOOK_URL"
